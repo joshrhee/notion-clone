@@ -1,81 +1,81 @@
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 
-import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+interface NavigationProps {
+  items: { id: string; title: string }[];
+  activeItem: string;
+  onItemClick: (id: string) => void;
+}
 
-const Navigation = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
+export const Navigation = ({ items, activeItem, onItemClick }: NavigationProps) => {
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   return (
-    <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/80 backdrop-blur-sm shadow-sm" : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <a href="#" className="text-2xl font-semibold">
-            Brand
-          </a>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <NavLinks />
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
+    <nav className="border-b border-gray-200 bg-white sticky top-0 z-10 w-full">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full">
+        <div className="flex h-16 items-center justify-between">
+          {isMobile ? (
+            <div className="flex justify-end w-full">
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-md hover:bg-notion-hover"
+                aria-label="Toggle menu"
+              >
+                <Menu className="h-6 w-6 text-notion-text" />
+              </button>
+              {isMenuOpen && (
+                <div className="absolute top-16 left-0 w-full bg-white border-b border-gray-200 shadow-lg animate-fade-in">
+                  <div className="py-2">
+                    {items.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          onItemClick(item.id);
+                          setIsMenuOpen(false);
+                        }}
+                        className={cn(
+                          "w-full px-4 py-2 text-left text-sm font-medium transition-colors duration-200",
+                          activeItem === item.id
+                            ? "bg-notion-gray text-notion-text"
+                            : "text-gray-500 hover:bg-notion-hover hover:text-notion-text"
+                        )}
+                      >
+                        {item.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex min-w-full">
+              <div className="flex space-x-8 whitespace-nowrap">
+                {items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onItemClick(item.id)}
+                    className={cn(
+                      "inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200",
+                      activeItem === item.id
+                        ? "border-b-2 border-notion-text text-notion-text"
+                        : "text-gray-500 hover:text-notion-text"
+                    )}
+                  >
+                    {item.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden pt-4 pb-6 animate-fade-in">
-            <NavLinks mobile onClick={() => setIsMenuOpen(false)} />
-          </div>
-        )}
       </div>
     </nav>
   );
 };
-
-const NavLinks = ({ mobile = false, onClick }: { mobile?: boolean; onClick?: () => void }) => {
-  const links = ["Features", "About", "Contact"];
-  const baseClasses = "transition-colors duration-200";
-  const mobileClasses = "block py-2 hover:text-accent";
-  const desktopClasses = "hover:text-accent";
-
-  return (
-    <div className={mobile ? "flex flex-col space-y-2" : "flex space-x-8"}>
-      {links.map((link) => (
-        <a
-          key={link}
-          href={`#${link.toLowerCase()}`}
-          className={`${baseClasses} ${mobile ? mobileClasses : desktopClasses}`}
-          onClick={onClick}
-        >
-          {link}
-        </a>
-      ))}
-    </div>
-  );
-};
-
-export default Navigation;
